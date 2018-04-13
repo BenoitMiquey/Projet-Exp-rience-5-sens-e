@@ -207,7 +207,7 @@ void NewSimonPlay(){
       break;
       case 6: // mauvais appuis sur une face
         msgLog ="PERDU SCORE :";
-        msgLog +=(suiteFaces.size()-1);
+        msgLog +=(suiteFaces.size());
         LogPlay(msgLog);
         suiteFaces.clear();
         TalkToSlave('A', "Vibre,80", MAXRETRY);
