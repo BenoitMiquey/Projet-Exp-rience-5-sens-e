@@ -2,7 +2,7 @@
 
 Ce dépôt git contient le code du Slave et du Master.
 #
-#Introduction
+# Introduction
 #
 Important : 
 Il y a deux méthodes de communication avec le Slave:
@@ -21,3 +21,16 @@ Dans le fichier IfDef.h :
 #
 # Les commandes envers le module slave
 #
+Commande <Col,F1,F2,F3,F4,F5,F6>
+
+permet d'affecter une couleur à chaques faces.
+- 0=BLEU
+- 1=VERT
+- 2=JAUNE
+- 3=ORANGE
+- 4=ROUGE
+- 5=VIOLET
+- 6=BLANC 
+- 7=NOIR
+- (NOIR=eteint)
+- 8=BG (BG =couleur BackGround) 
