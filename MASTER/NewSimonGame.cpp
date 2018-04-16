@@ -95,7 +95,7 @@ int chooseANeighbourFace()
     a= a -2;
     result = abs((suiteFaces.get((suiteFaces.size()-1))-a)%6);
   }
-  while ( result == Tot[0].FaceBot && (Tot[0].FaceBot !=(suiteFaces.get((suiteFaces.size()-1) ))) );
+  while ( result == Tot[0].FaceBot || (result ==(suiteFaces.get((suiteFaces.size()-1) ))) );
   msgLog = "Face attendue :";
   msgLog +=result;
   LogPlay(msgLog);
@@ -140,11 +140,12 @@ void NewSimonPlay(){
       colorFaces[1] = Palette[ROSE];
       colorFaces[2] = Palette[JAUNE];
       colorFaces[3] = Palette[ORANGE];
-      colorFaces[4] = Palette[MARRON];
+      colorFaces[4] = Palette[CYAN];
       colorFaces[5] = Palette[VIOLET];
       message = "Animation,0";
+      TalkToSlave('A', "BGcolor,0,0,0", MAXRETRY);
       TalkToSlave('A',message,MAXRETRY);
-      Tot[0].Colorie( BLEU,ROSE,JAUNE,ORANGE,MARRON,VIOLET,1);
+      Tot[0].Colorie( BLEU,ROSE,JAUNE,ORANGE,CYAN,VIOLET,1);
       token = 1; // on donne la main a lajout de faces dans la lise
     break;
     case 1: // on ajoute une face aleatoire a la liste chainee
@@ -256,6 +257,10 @@ void PaletteInit()
   Palette[MARRON].R = 35;
   Palette[MARRON].G = 10;
   Palette[MARRON].B = 3;
+  Palette[CYAN].R = 66;
+  Palette[CYAN].G = 245;
+  Palette[CYAN].B = 245;
+  
 }
 
 

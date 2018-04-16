@@ -34,6 +34,8 @@ struct Faces
 	int TouchLevel;
 	int TouchState;
 	int LedIndex[3];
+	int colorIndex; // Petit ajout qui permet d'obtenir l'index de la couleur ( palette )
+	bool WaitRelease;
 	int Red;
 	int Green;
 	int Blue;
@@ -59,7 +61,7 @@ struct Animation_
   int Green=0;
   int Blue=0;
 };
-enum modes { STOP, ROTATION, TOPLIGHT };
+enum modes { STOP, ROTATION, TOPLIGHT , ANIMFLASH};
 
 //*************** Filtrage et grille magnetique inclinometre
 struct FilterStruct

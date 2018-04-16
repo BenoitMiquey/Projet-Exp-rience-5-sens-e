@@ -25,7 +25,7 @@ struct Behavior_
   int ErrorSector;//l'inclinaison lors de l'erreur
 };
 enum BehaviorStates {INIT, WAIT_FACEMATCH, WAIT_NOFACE, CHECK_RFID, MATCHED, MATCH_ERROR, STANDBY};
-enum Couleurs {BLEU, VERT, JAUNE, ORANGE, ROUGE, VIOLET, ROSE, MARRON, BLANC, NOIR, BG};
+enum Couleurs {BLEU, VERT, JAUNE, ORANGE, ROUGE, VIOLET, ROSE, MARRON, BLANC, NOIR,CYAN, BG};
 //enum Couleurs {BLEU, VERT, JAUNE, ORANGE, ROUGE, VIOLET, BLANC, NOIR, BG};
 
 #endif // not defined BITS_H

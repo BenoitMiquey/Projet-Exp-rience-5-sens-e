@@ -347,5 +347,8 @@ void PaletteInit()
   Palette[MARRON].R = 35;
   Palette[MARRON].G = 10;
   Palette[MARRON].B = 3;
+  Palette[CYAN].R = 66;
+  Palette[CYAN].G = 245;
+  Palette[CYAN].B = 245;
 }
 

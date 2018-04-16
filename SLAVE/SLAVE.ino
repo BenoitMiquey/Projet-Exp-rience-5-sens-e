@@ -1,7 +1,7 @@
 //config HW= Arduino pro mini, ATmega328 3V3 8Mhz
 //attention: à 8Mhz, Arduino ne peut pas depasser 57600 bps en UART
 
-
+#define REDUCELIGHT 0.05
 
 #define UARTSPEED 57600
 #define SMARTALPHASPEED 38400
@@ -53,7 +53,8 @@ void SerialRxProcess();
 void CommandExec();
 void PaletteInit();
 void SerialFlush();
-
+int flashState =1;
+int topFaceLight;
 void setup()
 {
   pinMode(CD4051_A, OUTPUT);
@@ -106,7 +107,7 @@ void setup()
   BGcolor.G = 0;
   BGcolor.B = 10;
   ClearFaces(1);
-  Anim.Mode = 2;
+  Anim.Mode = 3;
   Anim.Red = 255;
   Anim.Green = 255;
   Anim.Blue = 255;
@@ -343,7 +344,6 @@ void UpdateFacesLeds()
 {
   int face;
   static int PreviousFace = -1;
-
   switch (Anim.Mode)
   {
     case STOP:
@@ -389,6 +389,129 @@ void UpdateFacesLeds()
         PreviousFace = -1;
         ClearFaces(1);
       }
+      break;
+      case ANIMFLASH:
+      
+        if (flashState == 1)
+        {
+          flashState = 0;
+          for(int i; i < 6; i++)
+          {
+            //Serial.print("init flash demo...");
+            Face[i].colorIndex = i;
+            VibrationMotor += 5;
+            pixels.setPixelColor(Face[i].LedIndex[0], Palette[i].R*REDUCELIGHT, Palette[i].G*REDUCELIGHT , Palette[i].B*REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[1], Palette[i].R*REDUCELIGHT, Palette[i].G*REDUCELIGHT , Palette[i].B*REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[2], Palette[i].R*REDUCELIGHT, Palette[i].G*REDUCELIGHT , Palette[i].B*REDUCELIGHT );
+          }
+          
+          pixels.show();
+        }
+
+
+
+
+        face = Inclinaison.Secteur;
+        for( int i; i < 6; i++)
+        {
+          if((Face[i].TouchState == 1) && !(Face[i].WaitRelease ))
+          {
+            
+            VibrationMotor += 8;
+            Face[i].WaitRelease = 1;
+            Face[i].colorIndex = (Face[i].colorIndex + 1)%6;
+            if (face == i) // si la top face est celle sur laquelle on appuie, on applique pas de reduction de luminosité
+            {
+              pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
+              pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
+              pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
+            }
+            else
+            {
+              pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+              pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+              pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+            }
+            pixels.show();
+            break;
+          }
+        }
+        for( int i; i < 6; i++)
+        {
+          if((Face[i].TouchState == 0) && (Face[i].WaitRelease ))
+          {
+            Face[i].WaitRelease = 0;
+            break;
+          }
+        }
+        if ( AllSameFaces()){
+            //FlashExplode();
+  
+          for ( int i=0; i < 255; i++)
+          {
+            for(int j=0; j < 6; j++)
+            {
+              pixels.setPixelColor(Face[j].LedIndex[0], (Palette[Face[j].colorIndex].R+i)%255 , (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
+              pixels.setPixelColor(Face[j].LedIndex[1], (Palette[Face[j].colorIndex].R+i)%255, (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
+              pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R+i)%255,( Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255);
+            }
+          pixels.show();
+          //delay(10);
+          }
+          for ( int i=255; i > 0; i--)
+          {
+            for(int j=0; j < 6; j++)
+            {
+              pixels.setPixelColor(Face[j].LedIndex[0], (Palette[Face[j].colorIndex].R+i)%255 , (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
+              pixels.setPixelColor(Face[j].LedIndex[1], (Palette[Face[j].colorIndex].R+i)%255, (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
+              pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R+i)%255,( Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255);
+            }
+          pixels.show();
+          //delay(10);
+          }
+        VibrationMotor += 20;
+        flashState = 1;   
+        }
+
+
+
+
+      face = Inclinaison.Secteur;
+      if (abs(Inclinaison.Tangage) < TANGAGE_MAX)
+      {
+        if (face != PreviousFace)
+        {
+          //ClearFaces(0); on remet tout en low
+          for ( int i= 0; i < 6 ; i ++)
+          {
+            pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+          }
+
+          // on met en hight la topface
+          pixels.setPixelColor(Face[face].LedIndex[0], Palette[Face[face].colorIndex].R, Palette[Face[face].colorIndex].G , Palette[Face[face].colorIndex].B );
+          pixels.setPixelColor(Face[face].LedIndex[1], Palette[Face[face].colorIndex].R, Palette[Face[face].colorIndex].G, Palette[Face[face].colorIndex].B );
+          pixels.setPixelColor(Face[face].LedIndex[2], Palette[Face[face].colorIndex].R, Palette[Face[face].colorIndex].G , Palette[Face[face].colorIndex].B);
+          pixels.show();
+          if (Anim.Speed > 0) VibrationMotor = 3;
+        }
+        PreviousFace = face;
+      }
+      else
+      {
+        PreviousFace = -1;
+        // ClearFaces(1); sinon on met tout en low
+
+        for ( int i= 0; i < 6 ; i ++)
+          {
+            pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+          }
+          pixels.show();
+      }
+
       break;
   }
 }
@@ -477,6 +600,31 @@ void NoAnimation()
       pixels.setPixelColor(Face[i].LedIndex[2], BGcolor.R, BGcolor.G, BGcolor.B);
     }
     if (show) pixels.show();
+  }
+
+  bool AllSameFaces()
+  {
+    for( int i = 0; i < 5; i ++)
+    {
+      if( Face[i].colorIndex != Face[i+1].colorIndex ) return false;
+    }
+    return true;
+  }
+
+  void FlashExplode()
+  {
+      for ( int i=0; i < 255; i++)
+      {
+        for ( int j ; j <6; j++)
+        {
+            pixels.setPixelColor(Face[j].LedIndex[0],200, i, i);
+            pixels.setPixelColor(Face[j].LedIndex[1], i,i ,i);
+            pixels.setPixelColor(Face[j].LedIndex[2], i, i, i);
+            pixels.show();
+            
+        }
+        delay(25);
+      }
   }
 
 

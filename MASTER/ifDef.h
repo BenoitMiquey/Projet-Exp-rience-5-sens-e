@@ -62,7 +62,7 @@ void ColorieFace(char Tot, int Face, int Couleur, int Mode);
 void DeckInit(void);
 enum BehaviorStates {INIT, WAIT_FACEMATCH, WAIT_NOFACE, CHECK_RFID, MATCHED, MATCH_ERROR, STANDBY};
 //enum Couleurs {BLEU, VERT, JAUNE, ORANGE, ROUGE, VIOLET, BLANC, NOIR, BG};
-enum Couleurs {BLEU, VERT, JAUNE, ORANGE, ROUGE, VIOLET, ROSE, MARRON, BLANC, NOIR, BG};
+enum Couleurs {BLEU, VERT, JAUNE, ORANGE, ROUGE, VIOLET, ROSE, MARRON, BLANC, NOIR, CYAN, BG};
 
 #endif // not defined BITS_H
 // contenu de UnProjet.cpp
