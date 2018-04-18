@@ -7,8 +7,9 @@
 #define SMARTALPHASPEED 38400
 #define _SS_MAX_RX_BUFF 256 // Software serial RX buffer size 
 #define BUFFER_LENGHT 64 //taille buffer I2C
-
-#define TOUCH_TRIG 200
+// 700;for the purple slave
+// 200 for the blanc
+#define TOUCH_TRIG 50
 #define TOUCH_HYSTERESIS 10
 #define TOUCH_INHIB 20
 #define TANGAGE_MAX 30
@@ -445,8 +446,6 @@ void UpdateFacesLeds()
           }
         }
         if ( AllSameFaces()){
-            //FlashExplode();
-  
           for ( int i=0; i < 255; i++)
           {
             for(int j=0; j < 6; j++)
@@ -456,7 +455,6 @@ void UpdateFacesLeds()
               pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R+i)%255,( Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255);
             }
           pixels.show();
-          //delay(10);
           }
           for ( int i=255; i > 0; i--)
           {
@@ -467,7 +465,6 @@ void UpdateFacesLeds()
               pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R+i)%255,( Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255);
             }
           pixels.show();
-          //delay(10);
           }
         VibrationMotor += 20;
         flashState = 1;   
@@ -609,22 +606,6 @@ void NoAnimation()
       if( Face[i].colorIndex != Face[i+1].colorIndex ) return false;
     }
     return true;
-  }
-
-  void FlashExplode()
-  {
-      for ( int i=0; i < 255; i++)
-      {
-        for ( int j ; j <6; j++)
-        {
-            pixels.setPixelColor(Face[j].LedIndex[0],200, i, i);
-            pixels.setPixelColor(Face[j].LedIndex[1], i,i ,i);
-            pixels.setPixelColor(Face[j].LedIndex[2], i, i, i);
-            pixels.show();
-            
-        }
-        delay(25);
-      }
   }
 
 

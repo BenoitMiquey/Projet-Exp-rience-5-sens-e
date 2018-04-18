@@ -4,7 +4,7 @@
 //#define COMUART // choix entrée commandes par USB-UART ou Par SMARTALPHA 433Mhz
 //#define DEBUG
 
-#define TOTEMIGO_ADDR 'A'
+#define TOTEMIGO_ADDR 'C'
 
 struct color
 {
