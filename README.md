@@ -23,6 +23,9 @@ Dans le fichier IfDef.h :
 
 ### Commande < Col,F1,F2,F3,F4,F5,F6 >
 #
+
+Valeurs possibles de F1, F2, F3 ...
+
 0=BLEU, 1=VERT, 2=JAUNE, 3=ORANGE, 4=ROUGE, 5=VIOLET, 6=BLANC,  
 7=NOIR (NOIR=eteint), 8=BG (BG =couleur BackGround).
 On peut ajouter de nouvelles couleurs à la palette.
@@ -36,7 +39,6 @@ Exemple <Col,4,2,3,4,3,6>
 #
 Permet de définir la couleur du baground en donnant les quantités de rouge, bleu, et vert ( de 0 à 255 pour chacunes )
 
-
 ```
 Exemple <BGcolor,255,0,0> => la couleur BG sera Rouge 
 ```
@@ -44,13 +46,13 @@ Exemple <BGcolor,255,0,0> => la couleur BG sera Rouge
 #
 ### Commande  < Animation,Mode,R,G,B,Speed/Vibre >
 #
+
 Permet de changer l'animation d'un slave,
 
 - Mode=0 => pas d'animation 
 - Mode=1 => rotation 
 - Mode=2 => Topface (mode "démo") 
 - Mode=3 => FlashAnimation 
-OK,TotState,19,5,0
 - R,G,B => composantes de couleur 
 - Speed/Vibre => dans le Mode 1: vitesse de l'animation (de 1 à 1000.  10=rapide, 1000=lent) 
             => dans les autres modes: valide ou non la vibration (0=off, 1=on) lors de la rotation du slave
@@ -65,7 +67,7 @@ Exemple 2: <Animation,2,255,0,0,1> = démo "Topface" en Rouge, avec vibration
 Exemple 3: <Animation,2,0,255,0,0> = démo "Topface" en Vert, sans vibration 
 
 Exemple 4: <Animation,0> => pas d'animation 
-L
+
 Exemple 5: <Animation,3,0,0,0,1> => démo FlashExplode, avec vibration
 ```
 
@@ -82,7 +84,6 @@ Cligno:
 
 R,G,B => composantes de couleur 
 
-
 ```
 Exemple 1 <FaceLed,2,10,255,255,255> => la face 2 clignote en blanc 
 
@@ -98,10 +99,11 @@ Exemple 4 <FaceLed,6,10,255,0,0> => toutes les faces clignotent en rouge
 ### Commande  < TotState >
 #
             
-Interroge l'état du Slave, il répondra "OK,TotState,Touch,Secteur,Tilt" 
-, Touch= état logique des capteurs tactiles, somme des poids binaires 
-Secteur= le N° de la face qui est en haut 
-Tilt=l'inclinaison en degres sur l'axe "tangage"
+Interroge l'état du Slave, il répondra "OK,TotState,Touch,Secteur,Tilt"
+
+- Touch = état logique des capteurs tactiles, somme des poids binaires 
+- Secteur = le N° de la face qui est en haut 
+- Tilt = l'inclinaison en degres sur l'axe "tangage"
 
 ```
 Exemples de reponse
@@ -118,13 +120,11 @@ Exemples de reponse
             
 Permet de connaître l'état logique de chaque faces 
 
-
 ```
 Exemple de réponse
 
 "OK,TouchState,0,0,1,0,1,0" => Les faces 2 et 4 sont appuyées
 ```
-
 
 #
 ### Commande < TouchLevel >
@@ -173,7 +173,6 @@ Exemple de réponse
 
 "OK,Inclino,3,330,0" => Secteur du dessus 3, angle 330 degres, tangage=0 
 ```
-
 
 #
 ### Commande < Sector >
