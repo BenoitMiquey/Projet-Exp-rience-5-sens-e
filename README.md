@@ -162,7 +162,6 @@ Fait vibrer le slave avec une durée, avec 100 qui vaut à peut près une second
 Exemple <Vibre,100> => vibre durant a peu près 1 seconde 
 ```
 
-
 #
 ### Commande < Inclino >
 #
@@ -175,4 +174,16 @@ Exemple de réponse
 "OK,Inclino,3,330,0" => Secteur du dessus 3, angle 330 degres, tangage=0 
 ```
 
+
+#
+### Commande < Sector >
+#
+
+Permet de lire seulement le numéro de la face/secteur qui se trouve sur le dessus
+
+```
+Exemple de réponse
+
+"OK,Sector,3" => Face supérieure en secteur angulaire 3 
+```
 
