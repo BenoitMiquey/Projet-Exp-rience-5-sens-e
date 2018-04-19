@@ -20,7 +20,7 @@ Dans le fichier IfDef.h :
 -Mettre en commentaire juste DEBUG pour communiquer via le cable USB en utilisant le moniteur série
 #
 ## Les commandes envers le module slave
-#
+
 ### Commande < Col,F1,F2,F3,F4,F5,F6 >
 #
 0=BLEU, 1=VERT, 2=JAUNE, 3=ORANGE, 4=ROUGE, 5=VIOLET, 6=BLANC,  
