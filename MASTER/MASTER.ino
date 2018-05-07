@@ -81,7 +81,8 @@ void loop()
 {
   if (SerialRxProcess())CmdInterpreter();
   //SimonPlay();
-  NewSimonPlay();
+  //NewSimonPlay();
+  CalculPlay();
 }
 
 //*******************************************************

@@ -58,6 +58,7 @@ void Demo4(void);
 void Demo5(void);
 void SimonPlay(void);
 void NewSimonPlay(void);
+void CalculPlay(void);
 void ColorieFace(char Tot, int Face, int Couleur, int Mode);
 void DeckInit(void);
 enum BehaviorStates {INIT, WAIT_FACEMATCH, WAIT_NOFACE, CHECK_RFID, MATCHED, MATCH_ERROR, STANDBY};

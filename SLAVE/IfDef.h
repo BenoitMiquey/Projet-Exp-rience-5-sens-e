@@ -1,10 +1,10 @@
 #ifndef BITS_H
 #define BITS_H
 
-//#define COMUART // choix entrée commandes par USB-UART ou Par SMARTALPHA 433Mhz
+#define COMUART // choix entrée commandes par USB-UART ou Par SMARTALPHA 433Mhz
 //#define DEBUG
 
-#define TOTEMIGO_ADDR 'C'
+#define TOTEMIGO_ADDR 'B'
 
 struct color
 {
