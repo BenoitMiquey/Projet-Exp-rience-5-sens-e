@@ -9,7 +9,7 @@
 #define BUFFER_LENGHT 64 //taille buffer I2C
 // 700;for the purple slave
 // 200 for the blanc
-#define TOUCH_TRIG 900
+#define TOUCH_TRIG 10
 #define TOUCH_HYSTERESIS 10
 #define TOUCH_INHIB 20
 #define TANGAGE_MAX 30

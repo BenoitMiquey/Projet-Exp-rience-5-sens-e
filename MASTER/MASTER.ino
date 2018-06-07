@@ -1,3 +1,7 @@
+#include <Slave.h>
+
+#include <Wire.h>
+
 //config HW= Arduino pro mini, ATmega328 3V3 8Mhz
 
 //TODO:
@@ -69,7 +73,7 @@ void setup()
   Tot[2].Addr = 'C';
   Tot[3].Addr = 'D';
 
-  TalkToSlave('A', "BGcolor,0,0,0", MAXRETRY);
+  //TalkToSlave('A', "BGcolor,0,0,0", MAXRETRY);
   delay(1000);
   
  
@@ -82,7 +86,8 @@ void loop()
   if (SerialRxProcess())CmdInterpreter();
   //SimonPlay();
   //NewSimonPlay();
-  CalculPlay();
+  //CalculPlay();
+  Play();
 }
 
 //*******************************************************
@@ -211,7 +216,7 @@ void CmdInterpreter()
     Stemp += ">";
     Serial.print("\n\rAnswer: ");
     if (temp < MAXRETRY) Serial.println(Stemp);
-    else Serial.print("<RETRY ERROR>");
+    else //Serial.print("<RETRY ERROR>");
     Unknown = false;
   }
   //-------------------------------------------------------
@@ -246,7 +251,7 @@ bool SerialRxProcess()
           else ReceivedString += RecievedChar;
         }
       }
-      Serial.print("\n\rReceived from UART: ");
+      //Serial.print("\n\rReceived from UART: ");
       Serial.println(ReceivedString);
       String_Split(SPLIT);
       Cmd = true;

@@ -4,7 +4,7 @@
 //#include "LinkedList.h"
 //
 //
-//#define NBSLAVE 2 // le nombre de slaves participant au jeu
+//#define NBSLAVE 3 // le nombre de slaves participant au jeu
 //
 //
 //extern Adafruit_VS1053_FilePlayer mp3;

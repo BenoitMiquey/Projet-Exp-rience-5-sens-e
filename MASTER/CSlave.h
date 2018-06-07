@@ -32,15 +32,15 @@ class Slave
 
     Slave(void);
     //Slave(char addr, String ID);
-    Vibre();
-    Colorie(int F0, int F1, int F2, int F3, int F4, int F5, bool Apply);
-    LightFace(int Face, int palette);
-    ReadState();
-    Sprint(void);
-    ReadRFID(void);
-    BehaviorW(int State, int Fmatch, int Fcolor, int Fcligno, String RFID, int Last);
-    BehaviorR(void);
-    FaceBotUpdate(void);
+    void Vibre();
+    void Colorie(int F0, int F1, int F2, int F3, int F4, int F5, bool Apply);
+    void LightFace(int Face, int palette);
+    void ReadState();
+    void Sprint(void);
+    void ReadRFID(void);
+    void BehaviorW(int State, int Fmatch, int Fcolor, int Fcligno, String RFID, int Last);
+    void BehaviorR(void);
+    void FaceBotUpdate(void);
 };
 
 #endif

@@ -19,7 +19,7 @@ Slave::Slave(char addr, String ID)
 }*/
 
 
-Slave::BehaviorW(int State, int Fmatch, int Fcolor, int Fcligno, String RFID, int Last)
+void Slave::BehaviorW(int State, int Fmatch, int Fcolor, int Fcligno, String RFID, int Last)
 {
   String Cmd = "BeW,";
   Cmd += String(State);
@@ -37,7 +37,7 @@ Slave::BehaviorW(int State, int Fmatch, int Fcolor, int Fcligno, String RFID, in
   TalkToSlave(Addr, Cmd, MAXRETRY);
 }
 
-Slave::BehaviorR(void)
+void Slave::BehaviorR(void)
 {
   TalkToSlave(Addr, "BeR", MAXRETRY);
   State = Param[2];
@@ -52,7 +52,7 @@ Slave::BehaviorR(void)
   FaceBotUpdate();
 }
 
-Slave::Sprint(void)
+void Slave::Sprint(void)
 {
   Serial.print("\n\rSLAVE:"); Serial.print(Addr);
   Serial.print(" ID:"); Serial.print(ID);
@@ -79,7 +79,7 @@ Slave::Sprint(void)
 
 }
 
-Slave::ReadState(void)
+void Slave::ReadState(void)
 {
   TalkToSlave(Addr, "TotState", MAXRETRY);
 
@@ -104,19 +104,19 @@ Slave::ReadState(void)
   //RFID = Answer[5];
 }
 
-Slave::ReadRFID(void)
+void Slave::ReadRFID(void)
 {
   TalkToSlave(Addr, "FaceID", MAXRETRY);
   RFID = Answer[2];
   Neighbour = NeighbourFind(RFID);
 }
 
-Slave::Vibre(void)
+void Slave::Vibre(void)
 {
   TalkToSlave(Addr, "Vibre,3", MAXRETRY);
 }
 
-Slave::LightFace(int Face, int Palette)
+void Slave::LightFace(int Face, int Palette)
 {
   int Temp[] = {NOIR, NOIR, NOIR, NOIR, NOIR, NOIR};
   Temp[Face] = Palette;
@@ -135,7 +135,7 @@ Slave::LightFace(int Face, int Palette)
   TalkToSlave(Addr, Cmd, MAXRETRY);
 }
 
-Slave::Colorie(int F0, int F1, int F2, int F3, int F4, int F5, bool Apply)
+void Slave::Colorie(int F0, int F1, int F2, int F3, int F4, int F5, bool Apply)
 {
   Face[0].Couleur = F0;
   Face[1].Couleur = F1;
@@ -163,7 +163,7 @@ Slave::Colorie(int F0, int F1, int F2, int F3, int F4, int F5, bool Apply)
   }
 }
 
-Slave::FaceBotUpdate(void)
+void Slave::FaceBotUpdate(void)
 {
   switch (FaceTop)
   {
