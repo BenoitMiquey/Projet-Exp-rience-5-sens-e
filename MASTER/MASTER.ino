@@ -1,9 +1,7 @@
 #include <Slave.h>
-
 #include <Wire.h>
 
 //config HW= Arduino pro mini, ATmega328 3V3 8Mhz
-
 //TODO:
 // led IHM
 // Check Inscope
@@ -12,7 +10,6 @@
 using namespace std;
 #include "ifDef.h"
 #include "CSlave.h"
-
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
@@ -24,11 +21,7 @@ extern int Param[];
 
 
 Slave Tot[4];
-
-
-Adafruit_VS1053_FilePlayer mp3 =
-  Adafruit_VS1053_FilePlayer(BREAKOUT_RESET, BREAKOUT_CS, BREAKOUT_DCS, DREQ, CARDCS);
-
+Adafruit_VS1053_FilePlayer mp3 = Adafruit_VS1053_FilePlayer(BREAKOUT_RESET, BREAKOUT_CS, BREAKOUT_DCS, DREQ, CARDCS);
 int Cpt = 0;
 
 void setup()

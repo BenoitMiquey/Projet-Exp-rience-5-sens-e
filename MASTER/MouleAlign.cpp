@@ -1,4 +1,3 @@
-
 #include "ifDef.h"
 #include "CSlave.h"
 #include "stdlib.h"
@@ -14,8 +13,8 @@ String CodeRFID[] = {"", "", "", ""};
 extern Slave TotA, TotB, TotC, TotD;
 extern Slave Tot[4];
 String msgLog; // contient le message a envoyer dans le fichier de log
-// la liste chainée qui contient des elements de type SimonStep
- //fonction pour enregistrer dans le fichier log
+
+//fonction pour enregistrer dans le fichier log
 void LogPlay(String Message)
 {
   Serial.println(Message);
@@ -29,8 +28,6 @@ struct color
 };
 int winAction[5];
 int CursorSols = 0;
-color ColorSlavesPatern[3][6];
-color colorFaces[6];
 struct color Palette[16];
 int FaceClicked;
 int SlaveClicked;
@@ -68,7 +65,6 @@ String*  getCommands(String text)
   int j= 0;
   int minicpt=0;
   String current;
-  
   do{
     i++;
     if(text[i] == ':' or text[i] == ';' )
@@ -85,9 +81,7 @@ String*  getCommands(String text)
       Serial.println(text[i]);
       minicpt = minicpt+1;
     }
-    
   }while (text[i] != ';');
-  
   return commands;
 }
 String tmp;
@@ -97,45 +91,23 @@ File openFile()
   return SD.open("Moule.txt");
 }
 
-/*
-void InitVibre(int Slave, bool state)
+void initVibreRotation(int Slave, int dose) // La fonction permet d'initier d'un coup la vibration pour 3 slaves 
 {
-  Serial.println(state);
-  if(state) Serial.println("true VIBRE");
-  message = "Animation,2,0,0,0,"+(String)state;
-  if(Slave == 3)
-  {
-    
-    for(int i = 0; i<3; i++)
-    {
-      TalkToSlave(SlaveToChar[i],message, MAXRETRY);
-      TalkToSlave(SlaveToChar[i],"Animation,0", MAXRETRY);
-    }
-  }
-  else
-  {
-    TalkToSlave(SlaveToChar[Slave],message,MAXRETRY);
-    TalkToSlave(SlaveToChar[Slave],"Animation,0", MAXRETRY);
-  }
-}*/
-void initVibreRotation(int Slave, int dose)
-{
-    Serial.println("Paramètrage vibration");
+  Serial.println("Paramètrage vibration");
   if( Slave == 3)
   {
     for( int i=0; i<3;i++)
     {
       TalkToSlave(SlaveToChar[i],"SetVibration,"+(String)dose,MAXRETRY);
       delay(40);
-    }
-     
+    }   
   }
   else
   {
     TalkToSlave(SlaveToChar[Slave],"SetVibration,"+(String)dose,MAXRETRY);
   }
-
 }
+
 void InitColor(int Slave, int Face, int R, int G, int B)
 {
   Serial.println("COLORIAGE !!!!");
@@ -163,29 +135,21 @@ void InitColor(int Slave, int Face, int R, int G, int B)
     {
       colorFace(Face, {R,G,B},SlaveToChar[Slave]);
     }
-    
   }
-  
-  
-  
 }
 
 void readFile(File myFile)
 {
-
   if (myFile)
   {
     Serial.println("lecture réussie");
-
-      ligne =  myFile.readStringUntil('\n');
-      myFile.close();
-
+    ligne =  myFile.readStringUntil('\n');
+    myFile.close();
   }
   else Serial.println("error opening Log.txt");
 }
 
-
-void Play()
+void Play() // fonction maître
 {
   switch(token)
   { 
@@ -196,9 +160,9 @@ void Play()
       delay(100);
       TalkToSlave('C',"Animation,0", MAXRETRY);
       delay(100);
-      /*TalkToSlave('A', "BGcolor,0,0,0", MAXRETRY);
+      TalkToSlave('A', "BGcolor,0,0,0", MAXRETRY);
       TalkToSlave('B', "BGcolor,0,0,0", MAXRETRY);
-      TalkToSlave('C', "BGcolor,0,0,0", MAXRETRY);*/
+      TalkToSlave('C', "BGcolor,0,0,0", MAXRETRY);
       myFile = openFile();
       token = 1;
     break;
@@ -208,7 +172,6 @@ void Play()
       if(ligne[0] == '#')
       {
         getCommands(ligne);
-        
         Serial.println(ligne[0]);
         State = parseLigne[0];
         readFile(myFile);
@@ -222,12 +185,10 @@ void Play()
       if (State == "#CONDITION") token = 4;
       if (State == "#PLAY") token = 5;
       if(State ==  "#EOF") token = 0;
-      
     break;
     case 3:
       getCommands(ligne);
       Serial.println("bool avant conv   "+parseLigne[2]);
-//      if(parseLigne[0] == "VIBRE") InitVibre(atoi(parseLigne[1].c_str()),( atoi(parseLigne[2].c_str())));
       Serial.println("slave :     "+(String)atoi( parseLigne[1].c_str()));
       if(parseLigne[0] == "COLOR") InitColor(  atoi( parseLigne[1].c_str()  ) ,atoi(parseLigne[2].c_str()),atoi(parseLigne[3].c_str()),atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()));
       if(parseLigne[0] == "VIBROTATE") initVibreRotation(atoi( parseLigne[1].c_str()) ,atoi( parseLigne[2].c_str())); 
@@ -291,7 +252,6 @@ void Play()
        token = 1;
       State = "#END";
     break;
-    
     case 53://  loose
       Serial.print("LOOOOOOOOOSSSSEEEERRRR");
       token = 1;
@@ -302,7 +262,6 @@ void Play()
       getCommands(ligne);
       Serial.println("PREPARATION FIN");
       Serial.println(ligne);
-//      Serial.println("COMMANDE parseLigne[1]
       if ( (win == 1) &&  ( parseLigne[0] == "WIN"))
       {
         if ( parseLigne[1] == "COLOR" ) InitColor(atoi( parseLigne[2].c_str()  ) ,atoi(parseLigne[3].c_str()),atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
@@ -310,7 +269,6 @@ void Play()
       }
       else
       {
-//         InitColor(int Slave, int Face, int R, int G, int B)
         if( (win == 0) && ( parseLigne[0] == "LOOSE"))
         {
           if ( parseLigne[1] == "COLOR" ) InitColor(atoi( parseLigne[2].c_str()  ) ,atoi(parseLigne[3].c_str()),atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
@@ -323,12 +281,7 @@ void Play()
       }
   break;
   }
-  
 }
-
-
-
-
 
 // initialisation palette, on peut biensur ajouter des couleurs si besoin
 void PaletteInit()
@@ -365,8 +318,7 @@ void PaletteInit()
   Palette[MARRON].B = 3;
   Palette[CYAN].R = 66;
   Palette[CYAN].G = 245;
-  Palette[CYAN].B = 245;
-  
+  Palette[CYAN].B = 245;  
 }
 
 
