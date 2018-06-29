@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "Slave.h"
 #include <SlaveSeeedRFID.h> //attention: lib mofifiée par JNL, ajout méthode listen()
 

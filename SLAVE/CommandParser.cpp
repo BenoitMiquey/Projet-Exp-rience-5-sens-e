@@ -1,11 +1,12 @@
-#include <arduino.h>
+#include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "Slave.h"
-#include "ifdef.h"
+#include "IfDef.h"
 
 #define CR 0x0D
 #define LF 0x0A
-#define SPLITTERS 16 // nombre de délimiteurs MAX pris en compte
+//#define SPLITTERS 16 // nombre de délimiteurs MAX pris en compte
+#define SPLITTERS 8 // *************************** CORRECTION BUG 
 #define SPLIT ','
 #define TRAME_START '<'
 #define TRAME_END '>'
@@ -57,9 +58,8 @@ void SmartAlphaRxProcess()
           FlagCmd = 0;
           return(0);
         }
-        if ( Addr != TOTEMIGO_ADDR ) //ce message ne me concerne pas
+        if ( Addr != Slave_ADDR ) //ce message ne me concerne pas
         {
-          
           while (SmartAlpha.available())
           {
             RecievedChar = SmartAlpha.read();

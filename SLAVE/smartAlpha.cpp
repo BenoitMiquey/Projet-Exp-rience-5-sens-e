@@ -1,7 +1,7 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "Slave.h"
-#include "ifDef.h"
+#include "IfDef.h"
 
 byte DestAddr[] = {0x30, 0x30, 0x30, 0x4D};
 byte MyAddr[] = {0x30, 0x30, 0x30, 0x30};
@@ -28,6 +28,7 @@ void SmartAlphaSend(String Command)
 {
   //WARNING: trames de 64 octets maxi (taille du buffer)
   unsigned short CRC ;
+ 
   String CRCstring = "";
   String Trame = "";
   int Temp;
@@ -40,9 +41,11 @@ void SmartAlphaSend(String Command)
   // Total = 7 chr
   // buffer capacity =64 bytes - 7 = 57
 
-
-
-  while (digitalRead(SMARTALPHA_CTS)); //attente module RF libre
+  while (digitalRead(SMARTALPHA_CTS))
+  {
+    Serial.println("Wait.....");
+     //attente module RF libre
+  }
   delay(20);
   SmartAlpha.print(Trame);
   SmartAlpha.write('\r');

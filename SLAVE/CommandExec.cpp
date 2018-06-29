@@ -1,5 +1,4 @@
-#include <arduino.h>
-#include "Slave.h"
+#include <Arduino.h>
 #include "Slave.h"
 #include "IfDef.h"
 
@@ -12,16 +11,19 @@ void SmartAlphaSend(String StringoSend);
 void UpdateFacesLeds();
 extern int VibrationMotor;
 extern struct Faces Face[];
-String Trame = "";
+String Trame = ""; //******************** CORRECTION BUG 
 extern struct Animation_ Anim;
 extern struct BGcolor_ BGcolor;
 extern int FlagCmd;
 extern struct Behavior_ Behavior;
+extern int VibrationRotate;
 
 void ClearFaces(int show);
 
 void CommandExec()
 {
+//String Trame = ""; //******************** CORRECTION BUG 
+
 #ifdef DEBUG
   Serial.print("CommandExec => ");
   Serial.println(Commande[0]);
@@ -56,7 +58,7 @@ void CommandExec()
     Behavior.FaceMatch = Param[2];
     Behavior.FaceColor = Param[3];
     Behavior.Cligno = Param[4];
-    Behavior.RFID = Commande[5];
+//    Behavior.RFID = Commande[5];
     if (Param[6] == 1) Behavior.Last = true;
     else Behavior.Last = false;
     Behavior.ErrorFace=-1;
@@ -200,6 +202,8 @@ void CommandExec()
     Trame += String(Inclinaison.Secteur);
     Trame += ",";
     Trame += String(Inclinaison.Tangage);
+    //Trame+="-10";
+    
     //Trame += ",";
     //Trame += String(Face[5].Rfid, HEX);
   }
@@ -277,6 +281,13 @@ void CommandExec()
       Trame += String(Face[i].Rfid, HEX);
       }*/
   }
+  if( Commande[0] == "SetVibration") //***************************
+  {
+    Trame = "OK,";
+    Trame += Commande[0];
+    VibrationRotate = Param[1];
+  }
+
 
   if (Commande[0] == "Vibre") //**********************************
   {
@@ -347,8 +358,5 @@ void PaletteInit()
   Palette[MARRON].R = 35;
   Palette[MARRON].G = 10;
   Palette[MARRON].B = 3;
-  Palette[CYAN].R = 66;
-  Palette[CYAN].G = 245;
-  Palette[CYAN].B = 245;
 }
 

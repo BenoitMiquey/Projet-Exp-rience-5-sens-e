@@ -87,6 +87,7 @@ void loop()
   //SimonPlay();
   //NewSimonPlay();
   //CalculPlay();
+  //rubikPlay();
   Play();
 }
 

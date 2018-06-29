@@ -4,7 +4,7 @@
 //#define COMUART // choix entrée commandes par USB-UART ou Par SMARTALPHA 433Mhz
 //#define DEBUG
 
-#define TOTEMIGO_ADDR 'C'
+#define Slave_ADDR 'B'
 
 struct color
 {
@@ -20,7 +20,7 @@ struct Behavior_
   int FaceMatch;  //la face a valider dans le Gameplay (si pas mon tour = -1)
   int FaceColor;  //Couleur de la face a valider, choix dans la palette
   int Cligno;     //base de temps du clignotement (si fixe =1)
-  String RFID;    //Le tag RFID du voisin a gauche (si premier de la ligne => pas de voisin => "noRFID"
+//  String RFID;    //Le tag RFID du voisin a gauche (si premier de la ligne => pas de voisin => "noRFID"
   int ErrorFace;  //La face appuyée erronee
   int ErrorSector;//l'inclinaison lors de l'erreur
 };

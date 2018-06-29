@@ -111,7 +111,7 @@
 //  switch(token)
 //  {
 //    case 0: // initialisation du GP
-//      sablierMelange = 0;
+//      sablierMelange = 4;
 //      blackSlave = 1;
 //      PaletteInit();
 //

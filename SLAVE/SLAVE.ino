@@ -1,15 +1,15 @@
+
 //config HW= Arduino pro mini, ATmega328 3V3 8Mhz
 //attention: à 8Mhz, Arduino ne peut pas depasser 57600 bps en UART
-
+#include "IfDef.h"
 #define REDUCELIGHT 0.05
 
 #define UARTSPEED 57600
 #define SMARTALPHASPEED 38400
 #define _SS_MAX_RX_BUFF 256 // Software serial RX buffer size 
 #define BUFFER_LENGHT 64 //taille buffer I2C
-// 700;for the purple slave
-// 200 for the blanc
-#define TOUCH_TRIG 10
+
+#define TOUCH_TRIG 350
 #define TOUCH_HYSTERESIS 10
 #define TOUCH_INHIB 20
 #define TANGAGE_MAX 30
@@ -18,9 +18,11 @@
 #include <SlaveSeeedRFID.h> //attention: lib mofifiée par JNL, ajout méthode listen()
 #include <Wire.h>
 #include <Adafruit_MMA8451.h>
+#include <Arduino.h>
 #include "Slave.h"
 #include <Adafruit_NeoPixel.h>
-#include "IfDef.h"
+
+
 
 #ifdef __AVR__
 #include <avr/power.h>
@@ -37,6 +39,7 @@ int xVal, yVal, zVal;
 int Rotation;
 struct Inclinaison_ Inclinaison;
 int VibrationMotor = 0;
+int VibrationRotate = 0;
 struct Faces Face[6];
 struct BGcolor_ BGcolor;
 struct Behavior_ Behavior;
@@ -54,8 +57,9 @@ void SerialRxProcess();
 void CommandExec();
 void PaletteInit();
 void SerialFlush();
-int flashState =1;
+int flashState = 1;
 int topFaceLight;
+
 void setup()
 {
   pinMode(CD4051_A, OUTPUT);
@@ -99,10 +103,10 @@ void setup()
   Serial.println("Done !");
   SmartAlpha.begin(SMARTALPHASPEED);
   SmartAlpha.listen();
-  SmartAlphaAddr(TOTEMIGO_ADDR);
+  SmartAlphaAddr(Slave_ADDR);
   digitalWrite(SMARTALPHA_RTS, HIGH);
-  Serial.print("TOTEMIGO ");
-  Serial.print(TOTEMIGO_ADDR);
+  Serial.print("Slave ");
+  Serial.print(Slave_ADDR);
   Serial.println(": Ready");
   BGcolor.R = 10;
   BGcolor.G = 0;
@@ -232,14 +236,14 @@ void BehaviorRun()
 
     case CHECK_RFID: //----------------------------------------------------
 
-      if ( Behavior.RFID != "noRFID")
+      /*if ( Behavior.RFID != "noRFID")
       {
         temp = ScanRFID(5);
-        if ( Behavior.RFID == String(temp, HEX)) RfidOK = true;
-        else RfidOK = false;
+        //if ( Behavior.RFID == String(temp, HEX)) RfidOK = true;
+        // else RfidOK = false;
       }
       else RfidOK = true;
-
+*/
       if (RfidOK) Behavior.State = MATCHED;
       else Behavior.State = WAIT_FACEMATCH;
 
@@ -284,7 +288,7 @@ void BehaviorRun()
       break;
 
     case MATCH_ERROR: //----------------------------------------------------
-      /*
+      
         Anim.Mode = ROTATION;
         Anim.Red = 255;
         Anim.Green = 0;
@@ -292,8 +296,8 @@ void BehaviorRun()
         Anim.Speed = 5;
         Anim.BdT = 1;
         Anim.Face = F;
-        Behavior.State = STANDBY;*/
-      /*
+        Behavior.State = STANDBY;
+      
         Anim.Mode = STOP;
         for (int f = 0; f < 6; f++)
         {
@@ -304,7 +308,7 @@ void BehaviorRun()
         Face[f].ClignoCount = 1;
         Face[f].ClignoState = true;
         }
-        FlagLedRefresh = true;*/
+        FlagLedRefresh = true;
       Behavior.State = STANDBY;
 
       break;
@@ -345,6 +349,7 @@ void UpdateFacesLeds()
 {
   int face;
   static int PreviousFace = -1;
+
   switch (Anim.Mode)
   {
     case STOP:
@@ -391,100 +396,93 @@ void UpdateFacesLeds()
         ClearFaces(1);
       }
       break;
-      case ANIMFLASH:
-      //Serial.print(Rfid);
+
+    
+    case ANIMFLASH: //***********************************************************
       
-        if (flashState == 1)
+      if (flashState == 1)
+      {
+        flashState = 0;
+        for (int i; i < 6; i++)
         {
-          flashState = 0;
-          for(int i; i < 6; i++)
-          {
-            //Serial.print("init flash demo...");
-            Face[i].colorIndex = i;
-            VibrationMotor += 5;
-            pixels.setPixelColor(Face[i].LedIndex[0], Palette[i].R*REDUCELIGHT, Palette[i].G*REDUCELIGHT , Palette[i].B*REDUCELIGHT );
-            pixels.setPixelColor(Face[i].LedIndex[1], Palette[i].R*REDUCELIGHT, Palette[i].G*REDUCELIGHT , Palette[i].B*REDUCELIGHT );
-            pixels.setPixelColor(Face[i].LedIndex[2], Palette[i].R*REDUCELIGHT, Palette[i].G*REDUCELIGHT , Palette[i].B*REDUCELIGHT );
-          }
-          
-          pixels.show();
+          //Serial.print("init flash demo...");
+          Face[i].colorIndex = i;
+          VibrationMotor += 5;
+          pixels.setPixelColor(Face[i].LedIndex[0], Palette[i].R * REDUCELIGHT, Palette[i].G * REDUCELIGHT , Palette[i].B * REDUCELIGHT );
+          pixels.setPixelColor(Face[i].LedIndex[1], Palette[i].R * REDUCELIGHT, Palette[i].G * REDUCELIGHT , Palette[i].B * REDUCELIGHT );
+          pixels.setPixelColor(Face[i].LedIndex[2], Palette[i].R * REDUCELIGHT, Palette[i].G * REDUCELIGHT , Palette[i].B * REDUCELIGHT );
         }
 
-
-
-
-        face = Inclinaison.Secteur;
-        for( int i; i < 6; i++)
+        pixels.show();
+      }
+      face = Inclinaison.Secteur;
+      for ( int i; i < 6; i++)
+      {
+        if ((Face[i].TouchState == 1) && !(Face[i].WaitRelease ))
         {
-          if((Face[i].TouchState == 1) && !(Face[i].WaitRelease ))
+
+          VibrationMotor += 8;
+          Face[i].WaitRelease = 1;
+          Face[i].colorIndex = (Face[i].colorIndex + 1) % 6;
+          if (face == i) // si la top face est celle sur laquelle on appuie, on applique pas de reduction de luminosité
           {
-            
-            VibrationMotor += 8;
-            Face[i].WaitRelease = 1;
-            Face[i].colorIndex = (Face[i].colorIndex + 1)%6;
-            if (face == i) // si la top face est celle sur laquelle on appuie, on applique pas de reduction de luminosité
-            {
-              pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
-              pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
-              pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
-            }
-            else
-            {
-              pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-              pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-              pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-            }
-            pixels.show();
-            break;
+            pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
+            pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
+            pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R, Palette[Face[i].colorIndex].G, Palette[Face[i].colorIndex].B);
           }
+          else
+          {
+            pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+          }
+          pixels.show();
+          break;
         }
-        for( int i; i < 6; i++)
+      }
+      for ( int i; i < 6; i++)
+      {
+        if ((Face[i].TouchState == 0) && (Face[i].WaitRelease ))
         {
-          if((Face[i].TouchState == 0) && (Face[i].WaitRelease ))
-          {
-            Face[i].WaitRelease = 0;
-            break;
-          }
+          Face[i].WaitRelease = 0;
+          break;
         }
-        if ( AllSameFaces()){
-          for ( int i=0; i < 255; i++)
+      }
+      if ( AllSameFaces()) {
+        for ( int i = 0; i < 255; i++)
+        {
+          for (int j = 0; j < 6; j++)
           {
-            for(int j=0; j < 6; j++)
-            {
-              pixels.setPixelColor(Face[j].LedIndex[0], (Palette[Face[j].colorIndex].R+i)%255 , (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
-              pixels.setPixelColor(Face[j].LedIndex[1], (Palette[Face[j].colorIndex].R+i)%255, (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
-              pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R+i)%255,( Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255);
-            }
-          pixels.show();
+            pixels.setPixelColor(Face[j].LedIndex[0], (Palette[Face[j].colorIndex].R + i) % 255 , (Palette[Face[j].colorIndex].G + i) % 255 , (Palette[Face[j].colorIndex].B + i) % 255 );
+            pixels.setPixelColor(Face[j].LedIndex[1], (Palette[Face[j].colorIndex].R + i) % 255, (Palette[Face[j].colorIndex].G + i) % 255 , (Palette[Face[j].colorIndex].B + i) % 255 );
+            pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R + i) % 255, ( Palette[Face[j].colorIndex].G + i) % 255 , (Palette[Face[j].colorIndex].B + i) % 255);
           }
-          for ( int i=255; i > 0; i--)
+          pixels.show();
+        }
+        for ( int i = 255; i > 0; i--)
+        {
+          for (int j = 0; j < 6; j++)
           {
-            for(int j=0; j < 6; j++)
-            {
-              pixels.setPixelColor(Face[j].LedIndex[0], (Palette[Face[j].colorIndex].R+i)%255 , (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
-              pixels.setPixelColor(Face[j].LedIndex[1], (Palette[Face[j].colorIndex].R+i)%255, (Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255 );
-              pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R+i)%255,( Palette[Face[j].colorIndex].G+i)%255 , (Palette[Face[j].colorIndex].B+i)%255);
-            }
-          pixels.show();
+            pixels.setPixelColor(Face[j].LedIndex[0], (Palette[Face[j].colorIndex].R + i) % 255 , (Palette[Face[j].colorIndex].G + i) % 255 , (Palette[Face[j].colorIndex].B + i) % 255 );
+            pixels.setPixelColor(Face[j].LedIndex[1], (Palette[Face[j].colorIndex].R + i) % 255, (Palette[Face[j].colorIndex].G + i) % 255 , (Palette[Face[j].colorIndex].B + i) % 255 );
+            pixels.setPixelColor(Face[j].LedIndex[2], (Palette[Face[j].colorIndex].R + i) % 255, ( Palette[Face[j].colorIndex].G + i) % 255 , (Palette[Face[j].colorIndex].B + i) % 255);
           }
+          pixels.show();
+        }
         VibrationMotor += 20;
-        flashState = 1;   
-        }
-
-
-
-
+        flashState = 1;
+      }
       face = Inclinaison.Secteur;
       if (abs(Inclinaison.Tangage) < TANGAGE_MAX)
       {
         if (face != PreviousFace)
         {
           //ClearFaces(0); on remet tout en low
-          for ( int i= 0; i < 6 ; i ++)
+          for ( int i = 0; i < 6 ; i ++)
           {
-            pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-            pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-            pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+            pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
           }
 
           // on met en hight la topface
@@ -492,7 +490,7 @@ void UpdateFacesLeds()
           pixels.setPixelColor(Face[face].LedIndex[1], Palette[Face[face].colorIndex].R, Palette[Face[face].colorIndex].G, Palette[Face[face].colorIndex].B );
           pixels.setPixelColor(Face[face].LedIndex[2], Palette[Face[face].colorIndex].R, Palette[Face[face].colorIndex].G , Palette[Face[face].colorIndex].B);
           pixels.show();
-          if (Anim.Speed > 0) VibrationMotor = 3;
+          if (Anim.Speed > 0) VibrationMotor = VibrationRotate;
         }
         PreviousFace = face;
       }
@@ -501,15 +499,15 @@ void UpdateFacesLeds()
         PreviousFace = -1;
         // ClearFaces(1); sinon on met tout en low
 
-        for ( int i= 0; i < 6 ; i ++)
-          {
-            pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-            pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-            pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R*REDUCELIGHT, Palette[Face[i].colorIndex].G*REDUCELIGHT , Palette[Face[i].colorIndex].B*REDUCELIGHT );
-          }
-          pixels.show();
+        for ( int i = 0; i < 6 ; i ++)
+        {
+          pixels.setPixelColor(Face[i].LedIndex[0], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+          pixels.setPixelColor(Face[i].LedIndex[1], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+          pixels.setPixelColor(Face[i].LedIndex[2], Palette[Face[i].colorIndex].R * REDUCELIGHT, Palette[Face[i].colorIndex].G * REDUCELIGHT , Palette[Face[i].colorIndex].B * REDUCELIGHT );
+        }
+        pixels.show();
       }
-
+      
       break;
   }
 }
@@ -520,94 +518,93 @@ void NoAnimation()
   int TopFace = -1;
   static int PreviousFace = -1;
   int face;
-   
+
   face = Inclinaison.Secteur;
   if (abs(Inclinaison.Tangage) < TANGAGE_MAX)
   {
     if (face != PreviousFace)
     {
-      VibrationMotor = 3;
+      VibrationMotor = VibrationRotate;
     }
     PreviousFace = face;
   }
-    for (int face = 0; face < 6; face++)
-    {
-      if (Face[face].ClignoTime > 1)
-      {
-        Face[face].ClignoCount--;
-        if (Face[face].ClignoCount == 0)
-        {
-          Face[face].ClignoCount = Face[face].ClignoTime;
-          Face[face].ClignoState = !(Face[face].ClignoState);
-          FlagLedRefresh = true;
-        }
-      }
-      //if (Face[face].ClignoState || (Inclinaison.Secteur == face))
-      if (Face[face].ClignoState )
-      {
-        pixels.setPixelColor(Face[face].LedIndex[0], pixels.Color(Face[face].Red, Face[face].Green, Face[face].Blue));
-        pixels.setPixelColor(Face[face].LedIndex[1], pixels.Color(Face[face].Red, Face[face].Green, Face[face].Blue));
-        pixels.setPixelColor(Face[face].LedIndex[2], pixels.Color(Face[face].Red, Face[face].Green, Face[face].Blue));
-      }
-      else
-      {
-        pixels.setPixelColor(Face[face].LedIndex[0], BGcolor.R, BGcolor.G, BGcolor.B);
-        pixels.setPixelColor(Face[face].LedIndex[1], BGcolor.R, BGcolor.G, BGcolor.B);
-        pixels.setPixelColor(Face[face].LedIndex[2], BGcolor.R, BGcolor.G, BGcolor.B);
-      }
-    }
-    if (FlagLedRefresh)
-    {
-      pixels.show();
-      FlagLedRefresh = false;
-    }
-  }
-  //*************************************************************
-  void InitFacesLeds()
+  for (int face = 0; face < 6; face++)
   {
-    Face[0].LedIndex[0] = 15;
-    Face[0].LedIndex[1] = 16;
-    Face[0].LedIndex[2] = 17;
-    Face[5].LedIndex[0] = 0;
-    Face[5].LedIndex[1] = 1;
-    Face[5].LedIndex[2] = 2;
-    Face[4].LedIndex[0] = 3;
-    Face[4].LedIndex[1] = 4;
-    Face[4].LedIndex[2] = 5;
-    Face[3].LedIndex[0] = 6;
-    Face[3].LedIndex[1] = 7;
-    Face[3].LedIndex[2] = 8;
-    Face[2].LedIndex[0] = 9;
-    Face[2].LedIndex[1] = 10;
-    Face[2].LedIndex[2] = 11;
-    Face[1].LedIndex[0] = 12;
-    Face[1].LedIndex[1] = 13;
-    Face[1].LedIndex[2] = 14;
-    ClearFaces(1);
-  }
-  //****************************************
-  void ClearFaces(int show)
-  {
-    for (int i = 0; i < 6; i++)
+    if (Face[face].ClignoTime > 1)
     {
-      Face[i].Red = 0;
-      Face[i].Green = 0;
-      Face[i].Blue = 0;
-      pixels.setPixelColor(Face[i].LedIndex[0], BGcolor.R, BGcolor.G, BGcolor.B);
-      pixels.setPixelColor(Face[i].LedIndex[1], BGcolor.R, BGcolor.G, BGcolor.B);
-      pixels.setPixelColor(Face[i].LedIndex[2], BGcolor.R, BGcolor.G, BGcolor.B);
+      Face[face].ClignoCount--;
+      if (Face[face].ClignoCount == 0)
+      {
+        Face[face].ClignoCount = Face[face].ClignoTime;
+        Face[face].ClignoState = !(Face[face].ClignoState);
+        FlagLedRefresh = true;
+      }
     }
-    if (show) pixels.show();
+    //if (Face[face].ClignoState || (Inclinaison.Secteur == face))
+    if (Face[face].ClignoState )
+    {
+      pixels.setPixelColor(Face[face].LedIndex[0], pixels.Color(Face[face].Red, Face[face].Green, Face[face].Blue));
+      pixels.setPixelColor(Face[face].LedIndex[1], pixels.Color(Face[face].Red, Face[face].Green, Face[face].Blue));
+      pixels.setPixelColor(Face[face].LedIndex[2], pixels.Color(Face[face].Red, Face[face].Green, Face[face].Blue));
+    }
+    else
+    {
+      pixels.setPixelColor(Face[face].LedIndex[0], BGcolor.R, BGcolor.G, BGcolor.B);
+      pixels.setPixelColor(Face[face].LedIndex[1], BGcolor.R, BGcolor.G, BGcolor.B);
+      pixels.setPixelColor(Face[face].LedIndex[2], BGcolor.R, BGcolor.G, BGcolor.B);
+    }
   }
+  if (FlagLedRefresh)
+  {
+    pixels.show();
+    FlagLedRefresh = false;
+  }
+}
+//*************************************************************
+void InitFacesLeds()
+{
+  Face[0].LedIndex[0] = 15;
+  Face[0].LedIndex[1] = 16;
+  Face[0].LedIndex[2] = 17;
+  Face[5].LedIndex[0] = 0;
+  Face[5].LedIndex[1] = 1;
+  Face[5].LedIndex[2] = 2;
+  Face[4].LedIndex[0] = 3;
+  Face[4].LedIndex[1] = 4;
+  Face[4].LedIndex[2] = 5;
+  Face[3].LedIndex[0] = 6;
+  Face[3].LedIndex[1] = 7;
+  Face[3].LedIndex[2] = 8;
+  Face[2].LedIndex[0] = 9;
+  Face[2].LedIndex[1] = 10;
+  Face[2].LedIndex[2] = 11;
+  Face[1].LedIndex[0] = 12;
+  Face[1].LedIndex[1] = 13;
+  Face[1].LedIndex[2] = 14;
+  ClearFaces(1);
+}
+//****************************************
+void ClearFaces(int show)
+{
+  for (int i = 0; i < 6; i++)
+  {
+    Face[i].Red = 0;
+    Face[i].Green = 0;
+    Face[i].Blue = 0;
+    pixels.setPixelColor(Face[i].LedIndex[0], BGcolor.R, BGcolor.G, BGcolor.B);
+    pixels.setPixelColor(Face[i].LedIndex[1], BGcolor.R, BGcolor.G, BGcolor.B);
+    pixels.setPixelColor(Face[i].LedIndex[2], BGcolor.R, BGcolor.G, BGcolor.B);
+  }
+  if (show) pixels.show();
+}
 
-  bool AllSameFaces()
+bool AllSameFaces()
+{
+  for ( int i = 0; i < 5; i ++)
   {
-    for( int i = 0; i < 5; i ++)
-    {
-      if( Face[i].colorIndex != Face[i+1].colorIndex ) return false;
-    }
-    return true;
+    if ( Face[i].colorIndex != Face[i + 1].colorIndex ) return false;
   }
-
+  return true;
+}
 
 
