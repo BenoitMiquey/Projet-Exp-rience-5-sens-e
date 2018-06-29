@@ -185,4 +185,16 @@ Exemple de réponse
 
 "OK,Sector,3" => Face supérieure en secteur angulaire 3 
 ```
+#
+### Commande < SetVibration, Slave, Durée>
+#
+
+Permet de changer le temps de vibration lorsque le Slave tourne.
+Slave : numéro du Slave, 0,1 ou 2.
+Durée : 100  corespond environ à 1 seconde
+```
+Exemple de réponse
+
+"OK,SetVibration,2,30" => Le SLave n°2 vibre pendant 300 milisecondes lorsqu'on le fait tourner.
+```
 
