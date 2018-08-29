@@ -1,3 +1,4 @@
+
 #include "ifDef.h"
 #include "CSlave.h"
 #include "stdlib.h"
@@ -5,7 +6,7 @@
 String State;
 int FocusSlave ;
 String music;
-bool win = 0;
+int win = 0;
 extern Adafruit_VS1053_FilePlayer mp3;
 char SlaveToChar[] = {'A','B','C'};
 String message = "";
@@ -13,8 +14,8 @@ String CodeRFID[] = {"", "", "", ""};
 extern Slave TotA, TotB, TotC, TotD;
 extern Slave Tot[4];
 String msgLog; // contient le message a envoyer dans le fichier de log
-
-//fonction pour enregistrer dans le fichier log
+// la liste chainée qui contient des elements de type SimonStep
+// fonction pour enregistrer dans le fichier log
 void LogPlay(String Message)
 {
   Serial.println(Message);
@@ -28,6 +29,8 @@ struct color
 };
 int winAction[5];
 int CursorSols = 0;
+color ColorSlavesPatern[3][6];
+color colorFaces[6];
 struct color Palette[16];
 int FaceClicked;
 int SlaveClicked;
@@ -43,7 +46,25 @@ File myFile;
 String ligne;
 int conditions[10];
 int nbConditions;
-int Solutions [3][8];
+int Solutions [3][30];
+bool reussite [3];
+void VibreSlave(int slave, int dose)
+{
+  if( slave == 3)
+  {
+    for ( int i = 0; i< 3; i++)
+    {
+      message = "Vibre,";
+      message += dose;
+      TalkToSlave(SlaveToChar[i],message,MAXRETRY); 
+    }
+  }
+  else
+  {
+    TalkToSlave(SlaveToChar[slave],"Vibre,"+dose,MAXRETRY);
+  }
+  
+}
 void colorFace(int face, color couleur, char Slave)
 {
   
@@ -65,11 +86,12 @@ String*  getCommands(String text)
   int j= 0;
   int minicpt=0;
   String current;
+  
   do{
     i++;
     if(text[i] == ':' or text[i] == ';' )
     {
-      Serial.println("current : "+current);
+      //Serial.println("current : "+current);
       parseLigne[j] = current;
       j ++;
       minicpt=0;
@@ -78,10 +100,12 @@ String*  getCommands(String text)
     else
     {
       current = current +text[i];
-      Serial.println(text[i]);
+      //Serial.println(text[i]);
       minicpt = minicpt+1;
     }
+    
   }while (text[i] != ';');
+  
   return commands;
 }
 String tmp;
@@ -91,69 +115,109 @@ File openFile()
   return SD.open("Moule.txt");
 }
 
-void initVibreRotation(int Slave, int dose) // La fonction permet d'initier d'un coup la vibration pour 3 slaves 
+/*
+void InitVibre(int Slave, bool state)
 {
-  Serial.println("Paramètrage vibration");
+  Serial.println(state);
+  if(state) Serial.println("true VIBRE");
+  message = "Animation,2,0,0,0,"+(String)state;
+  if(Slave == 3)
+  {
+    
+    for(int i = 0; i<3; i++)
+    {
+      TalkToSlave(SlaveToChar[i],message, MAXRETRY);
+      TalkToSlave(SlaveToChar[i],"Animation,0", MAXRETRY);
+    }
+  }
+  else
+  {
+    TalkToSlave(SlaveToChar[Slave],message,MAXRETRY);
+    TalkToSlave(SlaveToChar[Slave],"Animation,0", MAXRETRY);
+  }
+}*/
+void initVibreRotation(int Slave, int dose)
+{
+    Serial.println("Paramètrage vibration");
   if( Slave == 3)
   {
     for( int i=0; i<3;i++)
     {
       TalkToSlave(SlaveToChar[i],"SetVibration,"+(String)dose,MAXRETRY);
       delay(40);
-    }   
+    }
+     
   }
   else
   {
     TalkToSlave(SlaveToChar[Slave],"SetVibration,"+(String)dose,MAXRETRY);
   }
-}
 
+}
 void InitColor(int Slave, int Face, int R, int G, int B)
 {
   Serial.println("COLORIAGE !!!!");
-  int a,b,c,d;
-  if(Slave == 3 && Face == 6)
+  if(Slave == 3 && Face == 42)
   {
-    for( int i=0; i < 3; i++)
-    {
-      for(int j=0; j <6; j++)
+    for(int j=0; j <3; j++)
       {
-        colorFace(j, {R,G,B},SlaveToChar[i]);
+        colorFace(Tot[j].FaceTop, {R,G,B},SlaveToChar[j]);
       }
-    }
   }
   else
   {
-    if ( Face == 6)
+    if(Slave == 3 && Face == 6)
     {
-      for(int j=0; j <6; j++)
+      for( int i=0; i < 3; i++)
       {
-        colorFace(j, {R,G,B},SlaveToChar[Slave]);
+        for(int j=0; j <6; j++)
+        {
+          colorFace(j, {R,G,B},SlaveToChar[i]);
+        }
       }
     }
     else
     {
-      colorFace(Face, {R,G,B},SlaveToChar[Slave]);
+      if ( Face == 6)
+      {
+        for(int j=0; j <6; j++)
+        {
+          colorFace(j, {R,G,B},SlaveToChar[Slave]);
+        }
+      }
+      else
+      {
+        if ( Face == 42)
+        {
+          colorFace(Tot[Slave].FaceTop, {R,G,B},SlaveToChar[Slave]);
+        }
+        else
+        {
+          colorFace(Face, {R,G,B},SlaveToChar[Slave]);
+        }
+      } 
     }
   }
 }
 
 void readFile(File myFile)
 {
+
   if (myFile)
   {
     Serial.println("lecture réussie");
     ligne =  myFile.readStringUntil('\n');
-    myFile.close();
   }
   else Serial.println("error opening Log.txt");
 }
 
-void Play() // fonction maître
+
+void Play()
 {
   switch(token)
   { 
     case 0:
+    Serial.print("Flag1");
       TalkToSlave('A',"Animation,0", MAXRETRY);
       delay(100);
       TalkToSlave('B',"Animation,0", MAXRETRY);
@@ -164,31 +228,42 @@ void Play() // fonction maître
       TalkToSlave('B', "BGcolor,0,0,0", MAXRETRY);
       TalkToSlave('C', "BGcolor,0,0,0", MAXRETRY);
       myFile = openFile();
+      Serial.print("Flag2");
       token = 1;
     break;
     case 1:
+    Serial.print("Flag3");
       readFile(myFile);
       Serial.println(ligne);
       if(ligne[0] == '#')
       {
+        Serial.print("Flag4");
         getCommands(ligne);
+        Serial.print("Flag4.1");
         Serial.println(ligne[0]);
+        Serial.print("Flag4.2");
         State = parseLigne[0];
+        Serial.print("Flag4.3");
         readFile(myFile);
+        Serial.print("Flag4.4");
       }
+      Serial.print("Flag5");
       token =2;
     break;
     case 2:
+    Serial.print("Flag6");
       Serial.println("Changement d'état ( goto"+State+")");
       if (State == "#END") token = 6;
       if (State == "#INIT") token = 3;
       if (State == "#CONDITION") token = 4;
       if (State == "#PLAY") token = 5;
       if(State ==  "#EOF") token = 0;
+      
     break;
     case 3:
       getCommands(ligne);
       Serial.println("bool avant conv   "+parseLigne[2]);
+      //if(parseLigne[0] == "VIBRE") InitVibre(atoi(parseLigne[1].c_str()),( atoi(parseLigne[2].c_str())));
       Serial.println("slave :     "+(String)atoi( parseLigne[1].c_str()));
       if(parseLigne[0] == "COLOR") InitColor(  atoi( parseLigne[1].c_str()  ) ,atoi(parseLigne[2].c_str()),atoi(parseLigne[3].c_str()),atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()));
       if(parseLigne[0] == "VIBROTATE") initVibreRotation(atoi( parseLigne[1].c_str()) ,atoi( parseLigne[2].c_str())); 
@@ -196,7 +271,7 @@ void Play() // fonction maître
     break;
     case 4:
       getCommands(ligne);
-      Serial.println("Chargement des info du scénario : "+parseLigne[0]);
+      //Serial.println("Chargement des info du scénario : "+parseLigne[0]);
       if(parseLigne[0] == "NBCOND")
       {
         token = 41;
@@ -208,14 +283,25 @@ void Play() // fonction maître
     break;
     case 41:
       Serial.println("lecture du nombre de conditions    "+parseLigne[1] );
-      nbConditions = 8;
+      /*if(strlen (parseLigne[1].c_str()) >1)
+      {
+        nbConditions = atoi(parseLigne[1][0])*10;
+        nbConditions = nbConditions + atoi(parseLigne[1][1]);
+      }
+      else
+      {
+        nbConditions = atoi(parseLigne[1].c_str());
+      }*/
+      
+      Serial.println("NOMRE DE CONDITIONS ENREGISTRÉES : "+nbConditions);
       CursorSols = 0;
       Serial.println("nombre de conditions    "+ nbConditions );
       token = 1;
     break;
     case 42:
       Serial.println(" ajout d'une condition");
-      token = 43;
+      //token = 43;
+      nbConditions++;
       Solutions[0][CursorSols] = atoi( parseLigne[0].c_str() );
       Solutions[1][CursorSols] = atoi( parseLigne[1].c_str() );
       Solutions[2][CursorSols] = atoi( parseLigne[2].c_str() );  
@@ -235,53 +321,120 @@ void Play() // fonction maître
          token = 51;
        }
     break;
-    case 51://  vérif si c'est bon ou pas
+    case 51: // vérif si c'est bon ou pas
+       Serial.print("---------------------------------------------------------------------------------NOMBRE DE CONDITIONS : "+nbConditions);
        Tot[1].ReadState();
        token = 53;
+       reussite[0] = 0;
+       reussite[1] = 0;
+       reussite[2] = 0;
+       
        for( int i=0; i < nbConditions; i++)
        {
-         if( (Tot[0].FaceTop == Solutions[0][i]) && (Tot[1].FaceTop == Solutions[1][i]) && (Tot[2].FaceTop == Solutions[2][i]) )
+         if( (Tot[0].FaceTop == Solutions[0][i]) && (Tot[1].FaceTop == Solutions[1][i]) &&  (Tot[2].FaceTop != Solutions[2][i]) && (token != 52) )
+         {
+           
+           reussite[0] = 1;
+           reussite[1] = 1;
+           token = 54;
+         }
+         if( (Tot[1].FaceTop == Solutions[1][i]) && (Tot[2].FaceTop == Solutions[2][i]) &&  (Tot[0].FaceTop != Solutions[0][i]) && (token != 52) )
+         {
+           reussite[1] = 1;
+           reussite[2] = 1;
+           token = 54;
+         }
+         if ( (Tot[1].FaceTop == Solutions[1][i]) && (Tot[2].FaceTop == Solutions[2][i]) &&  (Tot[0].FaceTop == Solutions[0][i]) )
          {
            token = 52;
+           break;
          }
        }
     break;
-    case 52://  win
-       Serial.print("WIIIINERRRR");
+    case 52: // win
+       Serial.print("WIIIINERRRRRRRRRRRRRRRRRRRR");
        win = 1;
        token = 1;
-      State = "#END";
+       reussite[0] = 0;
+       reussite[1] = 0;
+       reussite[2] = 0;
+       
+      //State = "#END";
     break;
-    case 53://  loose
+    
+    case 53: // loose
       Serial.print("LOOOOOOOOOSSSSEEEERRRR");
       token = 1;
+      
+       reussite[0] = 0;
+       reussite[1] = 0;
+       reussite[2] = 0;
       win = 0;
-      State = "#END";
+      
+      //State = "#END";
+    break;
+    case 54:
+      Serial.print("MOYEN MOYEN MAIS BIEN QUAND MEME MOYEN MOYEN");
+      token = 1;
+      win = 2;
     break;
     case 6:
       getCommands(ligne);
+      token = 1;
       Serial.println("PREPARATION FIN");
       Serial.println(ligne);
+      //Serial.println("COMMANDE parseLigne[1]
       if ( (win == 1) &&  ( parseLigne[0] == "WIN"))
       {
-        if ( parseLigne[1] == "COLOR" ) InitColor(atoi( parseLigne[2].c_str()  ) ,atoi(parseLigne[3].c_str()),atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
+        if ( parseLigne[1] == "COLOR" ) InitColor(atoi( parseLigne[2].c_str()  ) ,42,atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
+        if ( parseLigne[1] == "VIBRE" ) VibreSlave(atoi( parseLigne[2].c_str()  ), atoi( parseLigne[3].c_str()  ));
         token = 1;
       }
       else
       {
+        // InitColor(int Slave, int Face, int R, int G, int B)
         if( (win == 0) && ( parseLigne[0] == "LOOSE"))
         {
-          if ( parseLigne[1] == "COLOR" ) InitColor(atoi( parseLigne[2].c_str()  ) ,atoi(parseLigne[3].c_str()),atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
+          if ( parseLigne[1] == "COLOR" ) InitColor(atoi( parseLigne[2].c_str()  ) ,42,atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
+          if ( parseLigne[1] == "VIBRE" ) VibreSlave(atoi( parseLigne[2].c_str()  ), atoi( parseLigne[3].c_str()  ));
           token = 1;
         }
         else
         {
-          token = 1;
+          if ( (win == 2) && ( parseLigne[0] == "MEDIUM"))
+          {
+            
+            if( (reussite[0]) && (reussite[1]) && (reussite[2]) && (parseLigne[1] == "COLOR") )
+            {
+              InitColor(atoi( parseLigne[2].c_str()  ) ,42,atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
+            }
+            else
+            {
+              for( int i = 0; i< 3; i ++)
+              {
+                if (!(reussite[i]))
+                {
+                  if ( parseLigne[1] == "COLOR" ) InitColor( i ,42,atoi(parseLigne[4].c_str()),atoi(parseLigne[5].c_str()),atoi(parseLigne[6].c_str()));
+                }
+                else
+                {
+                  InitColor(i ,42,0,0,0);
+                }
+              }
+            }
+            if ( parseLigne[1] == "VIBRE" ) VibreSlave(atoi( parseLigne[2].c_str()  ), atoi( parseLigne[3].c_str()  ));
+          }
         }
+          token = 1;
       }
   break;
   }
+  
 }
+
+
+
+
 
 // initialisation palette, on peut biensur ajouter des couleurs si besoin
 void PaletteInit()
@@ -318,7 +471,7 @@ void PaletteInit()
   Palette[MARRON].B = 3;
   Palette[CYAN].R = 66;
   Palette[CYAN].G = 245;
-  Palette[CYAN].B = 245;  
+  Palette[CYAN].B = 245;
+  
 }
-
 
